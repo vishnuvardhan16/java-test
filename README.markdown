@@ -64,7 +64,7 @@ Tips
 Good luck!
 
 [1]: http://maven.apache.org/
-[2]: https://bitbucket.org/
+[2]: https://github.com
 [3]: https://bitbucket.org/
 [4]: https://git-scm.com/book/en/v2/Getting-Started-Installing-Git
 [5]: https://git-scm.com/downloads/guis
