@@ -82,11 +82,10 @@ public class UserResource{
     @Path("delete/")
     public Response deleteUser(@QueryParam("name") String name) {
         
-    	/*User user = new User();
-        if(name != null) {
-    		user.setName(name);
-    	}*/
-
+    	if(name == null) {
+    		throw new BadRequestException("Invalid name");
+    	}
+    	
         String username = userDao.deleteUser(name);
         if(username.equals(name)) {
         	return Response.ok().entity(name).build();
