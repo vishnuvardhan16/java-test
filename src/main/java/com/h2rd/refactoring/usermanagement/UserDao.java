@@ -1,25 +1,21 @@
 package com.h2rd.refactoring.usermanagement;
 
 import java.util.ArrayList;
+import java.util.ListIterator;
 
+import org.springframework.stereotype.Repository;
+
+@Repository
 public class UserDao {
 
-    public ArrayList<User> users;
+    public ArrayList<User> users = new ArrayList<User>();
 
-    public static UserDao userDao;
-
-    public static UserDao getUserDao() {
-        if (userDao == null) {
-            userDao = new UserDao();
+    public User saveUser(User user) {
+        if(user != null) {
+        	users.add(user);
+        	return user;
         }
-        return userDao;
-    }
-
-    public void saveUser(User user) {
-        if (users == null) {
-            users = new ArrayList<User>();
-        }
-        users.add(user);
+        return null;
     }
 
     public ArrayList<User> getUsers() {
@@ -31,41 +27,59 @@ public class UserDao {
         }
     }
 
-    public void deleteUser(User userToDelete) {
+    public String deleteUser(String userToDelete) {
         try {
-            for (User user : users) {
-                if (user.getName() == userToDelete.getName()) {
-                    users.remove(user);
-                }
-            }
+        	if(users != null) {
+        		ListIterator<User> iterator = users.listIterator();
+        	
+        		while(iterator.hasNext()) {
+        			if(iterator.next().getName().equals(userToDelete)) {
+        				iterator.remove();
+        				return userToDelete;
+        			}
+        		}
+        	}
         } catch (Exception e) {
             e.printStackTrace();
         }
+        return null;
     }
 
-    public void updateUser(User userToUpdate) {
+    public User updateUser(User userToUpdate) {
         try {
-            for (User user : users) {
-                if (user.getName() == userToUpdate.getName()) {
-                    user.setEmail(userToUpdate.getEmail());
-                    user.setRoles(userToUpdate.getRoles());
-                }
+        	if(users != null) {
+        		for (User user : users) {
+        			if (user.getEmail() == userToUpdate.getEmail()) {
+        				user.setName(userToUpdate.getName());
+        				user.setRoles(userToUpdate.getRoles());
+        				return user;
+        			}
+        		}
             }
         } catch (RuntimeException e) {
             e.printStackTrace();
         }
+        return null;
     }
 
     public User findUser(String name) {
         try {
-            for (User user : users) {
-                if (user.getName() == name) {
-                    return user;
+        	if(users != null) {
+        		for (User user : users) {
+        			if (user.getName() == name) {
+        				return user;
+        			}
                 }
             }
         } catch (NullPointerException e) {
             e.printStackTrace();
         }
         return null;
+    }
+    
+    //to-do
+    public User searchUser(String name) {
+    
+    	throw new UnsupportedOperationException();
     }
 }

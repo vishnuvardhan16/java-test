@@ -2,44 +2,64 @@ package com.h2rd.refactoring.web;
 
 import com.h2rd.refactoring.usermanagement.User;
 import com.h2rd.refactoring.usermanagement.UserDao;
+import com.h2rd.refactoring.utils.ValidateEmail;
 
 import javax.ws.rs.*;
 import javax.ws.rs.core.GenericEntity;
+import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.BadRequestException;
 
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
-import org.springframework.stereotype.Repository;
+import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
 
 import java.util.ArrayList;
 import java.util.List;
 
 @Path("/users")
-@Repository
+@Service
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
 public class UserResource{
+    
+    private static ApplicationContext context = new ClassPathXmlApplicationContext(new String[] {
+    		"classpath:/application-config.xml"	
+    	});
+    
+    public UserDao userDao = context.getBean(UserDao.class);
 
-    public UserDao userDao;
-
-    @GET
+    @POST
     @Path("add/")
     public Response addUser(@QueryParam("name") String name,
                             @QueryParam("email") String email,
                             @QueryParam("role") List<String> roles) {
 
         User user = new User();
-        user.setName(name);
-        user.setEmail(email);
-        user.setRoles(roles);
-
-        if (userDao == null) {
-            userDao = UserDao.getUserDao();
+        
+        if(!name.isEmpty()) {
+        	user.setName(name);
+        }
+        
+        if(!email.isEmpty() || CollectionUtils.isEmpty(roles)) {
+        	if(ValidateEmail.validate(email)) {
+        		user.setEmail(email);
+        	} 	
+        } else {
+        	throw new BadRequestException("Invalid email address or roles is not provided");
         }
 
-        userDao.saveUser(user);
-        return Response.ok().entity(user).build();
+        user.setRoles(roles);
+
+        user = userDao.saveUser(user);
+        if(user != null) {
+        	return Response.ok().entity(user).build();
+        }
+        return Response.noContent().build();
     }
 
-    @GET
+    @PUT
     @Path("update/")
     public Response updateUser(@QueryParam("name") String name,
                                @QueryParam("email") String email,
@@ -49,41 +69,35 @@ public class UserResource{
         user.setName(name);
         user.setEmail(email);
         user.setRoles(roles);
+        userDao.users.add(user);
 
-        if (userDao == null) {
-            userDao = UserDao.getUserDao();
+        user = userDao.updateUser(user);
+        if (user != null) {
+        	return Response.ok().entity(user).build();
         }
-
-        userDao.updateUser(user);
-        return Response.ok().entity(user).build();
+        return Response.noContent().build();
     }
 
-    @GET
+    @DELETE
     @Path("delete/")
-    public Response deleteUser(@QueryParam("name") String name,
-                               @QueryParam("email") String email,
-                               @QueryParam("role") List<String> roles) {
-        User user = new User();
-        user.setName(name);
-        user.setEmail(email);
-        user.setRoles(roles);
+    public Response deleteUser(@QueryParam("name") String name) {
+        
+    	/*User user = new User();
+        if(name != null) {
+    		user.setName(name);
+    	}*/
 
-        if (userDao == null) {
-            userDao = UserDao.getUserDao();
+        String username = userDao.deleteUser(name);
+        if(username.equals(name)) {
+        	return Response.ok().entity(name).build();
         }
-
-        userDao.deleteUser(user);
-        return Response.ok().entity(user).build();
+        return Response.noContent().build();
     }
 
     @GET
     @Path("find/")
     public Response getUsers() {
-    	
-        ApplicationContext context = new ClassPathXmlApplicationContext(new String[] {
-    		"classpath:/application-config.xml"	
-    	});
-    	userDao = context.getBean(UserDao.class);
+    	        
     	List<User> users = userDao.getUsers();
     	if (users == null) {
     		users = new ArrayList<User>();
@@ -97,9 +111,9 @@ public class UserResource{
     @Path("search/")
     public Response findUser(@QueryParam("name") String name) {
 
-        if (userDao == null) {
-            userDao = UserDao.getUserDao();
-        }
+    	if(name == null) {
+    		throw new BadRequestException("Provide username");
+    	}
 
         User user = userDao.findUser(name);
         return Response.ok().entity(user).build();

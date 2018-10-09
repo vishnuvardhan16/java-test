@@ -3,7 +3,7 @@ package com.h2rd.refactoring.usermanagement;
 import javax.xml.bind.annotation.XmlRootElement;
 import java.util.List;
 
-@XmlRootElement
+@XmlRootElement(name = "User")
 public class User {
 
     String name;
